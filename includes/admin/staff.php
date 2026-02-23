@@ -1,5 +1,6 @@
 <?php
 session_start();
+include("auth.php");
 include("sidebar.php");
 include("../page/dbconnect.php");
 
