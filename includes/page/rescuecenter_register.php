@@ -2,6 +2,37 @@
 include("dbconnect.php");
 $message = '';
 
+// ✅ FREE OpenStreetMap Geocoding (NO API KEY)
+function getLatLong($address) {
+    $address = urlencode($address);
+
+    $url = "https://nominatim.openstreetmap.org/search?format=json&q=$address&limit=1";
+
+    $options = [
+        "http" => [
+            "header" => "User-Agent: PawsProtect/1.0 (student-project)"
+        ]
+    ];
+
+    $context = stream_context_create($options);
+    $response = @file_get_contents($url, false, $context);
+
+    if ($response === FALSE) {
+        return null;
+    }
+
+    $data = json_decode($response, true);
+
+    if (!empty($data)) {
+        return [
+            'lat' => (double)$data[0]['lat'],
+            'lng' => (double)$data[0]['lon']
+        ];
+    }
+
+    return null;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $center_name    = $_POST['center_name'] ?? '';
@@ -15,21 +46,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
+        // ✅ Get latitude & longitude (FREE)
+        $fullAddress = $address . ", " . $district . ", Sri Lanka";
+        $location = getLatLong($fullAddress);
+
+        $latitude  = $location['lat'] ?? null;
+        $longitude = $location['lng'] ?? null;
+
         $conn->begin_transaction();
 
         try {
+
             $sql1 = "INSERT INTO rescue_center 
-                    (center_name, address, district, contact_number, email, password, status)
-                    VALUES (?, ?, ?, ?, ?, ?, 'inactive')";
+                (center_name, address, district, contact_number, email, password, status, latitude, longitude)
+                VALUES (?, ?, ?, ?, ?, ?, 'inactive', ?, ?)";
 
             $stmt1 = $conn->prepare($sql1);
-            $stmt1->bind_param("ssssss", 
-                $center_name, 
-                $address, 
-                $district, 
-                $contact_number, 
-                $email, 
-                $hashed_password
+            $stmt1->bind_param(
+                "ssssssdd",
+                $center_name,
+                $address,
+                $district,
+                $contact_number,
+                $email,
+                $hashed_password,
+                $latitude,
+                $longitude
             );
             $stmt1->execute();
 
@@ -37,10 +79,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                      VALUES (?, ?, ?, ?, 'rescuecenter')";
 
             $stmt2 = $conn->prepare($sql2);
-            $stmt2->bind_param("ssss", 
-                $center_name, 
-                $email, 
-                $contact_number, 
+            $stmt2->bind_param(
+                "ssss",
+                $center_name,
+                $email,
+                $contact_number,
                 $hashed_password
             );
             $stmt2->execute();
@@ -51,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         } catch (Exception $e) {
             $conn->rollback();
-            $message = "❌ Registration failed: " . $e->getMessage();
+            $message = "❌ Registration failed. Please try again.";
         }
 
     } else {
