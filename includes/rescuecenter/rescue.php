@@ -44,6 +44,25 @@ $alertStmt = $conn->prepare(
 $alertStmt->bind_param("i", $rescue_center_id);
 $alertStmt->execute();
 $alert = $alertStmt->get_result()->fetch_assoc();
+
+$statusFilter = $_GET['status'] ?? 'All';
+
+if ($statusFilter === 'All') {
+    $query = "SELECT * FROM rescue_requests 
+              WHERE rescue_center_id = ? 
+              ORDER BY request_date DESC";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $rescue_center_id);
+} else {
+    $query = "SELECT * FROM rescue_requests 
+              WHERE rescue_center_id = ? AND status = ?
+              ORDER BY request_date DESC";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("is", $rescue_center_id, $statusFilter);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 
@@ -71,7 +90,15 @@ $alert = $alertStmt->get_result()->fetch_assoc();
         <div class="alert">🔔 <?= $alert['total'] ?> New</div>
     <?php endif; ?>
 </div>
-
+<form method="GET" class="filter-bar">
+    <label>Filter by Status:</label>
+    <select name="status" onchange="this.form.submit()">
+        <option value="All" <?= $statusFilter == 'All' ? 'selected' : '' ?>>All</option>
+        <option value="Pending" <?= $statusFilter == 'Pending' ? 'selected' : '' ?>>Pending</option>
+        <option value="In Progress" <?= $statusFilter == 'In Progress' ? 'selected' : '' ?>>In Progress</option>
+        <option value="Completed" <?= $statusFilter == 'Completed' ? 'selected' : '' ?>>Completed</option>
+    </select>
+</form>
 <table>
 <tr>
     <th>Animal</th>
