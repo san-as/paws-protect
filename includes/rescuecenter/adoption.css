@@ -48,23 +48,27 @@ table {
 }
 
 table th {
-    background: #5C4033;
-    color: white;
+    background: #5C4033;   
+    color: #ffffff;
     padding: 12px;
     font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 table td {
     padding: 12px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #e6ddd5;
     font-size: 14px;
+  background: #ddbc8b;
 }
 
 table tr:hover td {
-    background: #f5f0eb;
+    background: #f4ede6;
+    transition: background 0.2s ease-in-out;
 }
 
-.status-pending { color: #e38b06; font-weight: bold; }
+.status-pending { color: #fa920a; font-weight: bold; }
 .status-approved { color: #33c83dff ; font-weight: bold; }
 .status-rejected { color: #d43636ff; font-weight: bold; }
 

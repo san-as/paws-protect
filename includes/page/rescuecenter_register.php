@@ -2,7 +2,6 @@
 include("dbconnect.php");
 $message = '';
 
-// ✅ FREE OpenStreetMap Geocoding (NO API KEY)
 function getLatLong($address) {
     $address = urlencode($address);
 
@@ -46,7 +45,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        // ✅ Get latitude & longitude (FREE)
         $fullAddress = $address . ", " . $district . ", Sri Lanka";
         $location = getLatLong($fullAddress);
 
